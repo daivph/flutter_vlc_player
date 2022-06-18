@@ -1,3 +1,9 @@
+import 'dart:io';
+
+import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
+import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
 import 'vlc_player_controller.dart';
@@ -9,26 +15,26 @@ class VlcPlayer extends StatefulWidget {
   final Widget? placeholder;
   final bool virtualDisplay;
 
-  const VlcPlayer(
-      {Key? key,
+  const VlcPlayer({
+    Key? key,
 
-      /// The [VlcPlayerController] responsible for the video being rendered in
-      /// this widget.
-      required this.controller,
+    /// The [VlcPlayerController] responsible for the video being rendered in
+    /// this widget.
+    required this.controller,
 
-      /// The aspect ratio used to display the video.
-      /// This MUST be provided, however it could simply be (parentWidth / parentHeight) - where parentWidth and
-      /// parentHeight are the width and height of the parent perhaps as defined by a LayoutBuilder.
-      required this.aspectRatio,
+    /// The aspect ratio used to display the video.
+    /// This MUST be provided, however it could simply be (parentWidth / parentHeight) - where parentWidth and
+    /// parentHeight are the width and height of the parent perhaps as defined by a LayoutBuilder.
+    required this.aspectRatio,
 
-      /// Before the platform view has initialized, this placeholder will be rendered instead of the video player.
-      /// This can simply be a [CircularProgressIndicator] (see the example.)
-      this.placeholder,
+    /// Before the platform view has initialized, this placeholder will be rendered instead of the video player.
+    /// This can simply be a [CircularProgressIndicator] (see the example.)
+    this.placeholder,
 
-      /// Specify whether Virtual displays or Hybrid composition is used on Android.
-      /// iOS only uses Hybrid composition.
-      this.virtualDisplay = true})
-      : super(key: key);
+    /// Specify whether Virtual displays or Hybrid composition is used on Android.
+    /// iOS only uses Hybrid composition.
+    this.virtualDisplay = true,
+  }) : super(key: key);
 
   @override
   _VlcPlayerState createState() => _VlcPlayerState();
@@ -36,6 +42,7 @@ class VlcPlayer extends StatefulWidget {
 
 class _VlcPlayerState extends State<VlcPlayer>
     with AutomaticKeepAliveClientMixin {
+  static const String viewType = "vlc_player/vlc_player";
   @override
   bool get wantKeepAlive => true;
 
@@ -84,22 +91,54 @@ class _VlcPlayerState extends State<VlcPlayer>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    return AspectRatio(
-      aspectRatio: widget.aspectRatio,
-      child: Stack(
-        children: <Widget>[
-          Offstage(
-            offstage: _isInitialized,
-            child: widget.placeholder ?? Container(),
-          ),
-          Offstage(
-            offstage: !_isInitialized,
-            child: vlcPlayerPlatform.buildView(
-                widget.controller.onPlatformViewCreated,
-                virtualDisplay: widget.virtualDisplay),
-          ),
-        ],
-      ),
-    );
+
+    if (Platform.isAndroid) {
+      return PlatformViewLink(
+        viewType: viewType,
+        surfaceFactory:
+            (BuildContext context, PlatformViewController controller) {
+          return AndroidViewSurface(
+            controller: controller as AndroidViewController,
+            gestureRecognizers: const <Factory<OneSequenceGestureRecognizer>>{},
+            hitTestBehavior: PlatformViewHitTestBehavior.opaque,
+          );
+        },
+        onCreatePlatformView: (PlatformViewCreationParams platformParams) {
+          return PlatformViewsService.initSurfaceAndroidView(
+            id: platformParams.id,
+            viewType: viewType,
+            layoutDirection: TextDirection.ltr,
+            creationParamsCodec: const StandardMessageCodec(),
+          )
+            ..addOnPlatformViewCreatedListener(
+                platformParams.onPlatformViewCreated)
+            ..create();
+        },
+      );
+    } else if (Platform.isIOS) {
+      return const UiKitView(
+        viewType: viewType,
+        layoutDirection: TextDirection.ltr,
+        creationParamsCodec: StandardMessageCodec(),
+      );
+    } else {
+      return AspectRatio(
+        aspectRatio: widget.aspectRatio,
+        child: Stack(
+          children: <Widget>[
+            Offstage(
+              offstage: _isInitialized,
+              child: widget.placeholder ?? Container(),
+            ),
+            Offstage(
+              offstage: !_isInitialized,
+              child: vlcPlayerPlatform.buildView(
+                  widget.controller.onPlatformViewCreated,
+                  virtualDisplay: widget.virtualDisplay),
+            ),
+          ],
+        ),
+      );
+    }
   }
 }
