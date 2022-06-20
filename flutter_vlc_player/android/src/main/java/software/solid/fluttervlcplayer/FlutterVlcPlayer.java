@@ -9,14 +9,20 @@ import org.videolan.libvlc.interfaces.IMedia;
 import org.videolan.libvlc.interfaces.IVLCVout;
 
 import android.content.Context;
+import android.content.res.Resources;
 import android.graphics.Bitmap;
+import android.graphics.Point;
 import android.graphics.SurfaceTexture;
 import android.net.Uri;
+import android.opengl.GLES20;
 import android.util.Base64;
+import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.Display;
 import android.view.Surface;
 import android.view.SurfaceView;
 import android.view.View;
+import android.view.WindowManager;
 
 import io.flutter.plugin.common.BinaryMessenger;
 import io.flutter.plugin.common.EventChannel;
@@ -125,21 +131,29 @@ final class FlutterVlcPlayer implements PlatformView {
     // }
 
     public void initialize(List<String> options) {
-        this.options = options; 
+        this.options = options;
         libVLC = new LibVLC(context, options);
         mediaPlayer = new MediaPlayer(libVLC);
         setupVlcMediaPlayer();
     }
 
-    private void setupVlcMediaPlayer() {
 
+    private void setupVlcMediaPlayer() {
+        int mHeight;
+        int mWidth;
+
+        DisplayMetrics displayMetrics = new DisplayMetrics();
+        WindowManager windowManager = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
+        windowManager.getDefaultDisplay().getMetrics(displayMetrics);
+        mHeight = displayMetrics.heightPixels;
+        mWidth = displayMetrics.widthPixels;
         //
-        mediaPlayer.getVLCVout().setWindowSize(textureView.getWidth(), textureView.getHeight());
+
+        mediaPlayer.getVLCVout().setWindowSize(mWidth, mHeight);
         mediaPlayer.getVLCVout().setVideoSurface(textureView.getSurfaceTexture());
         textureView.setTextureEntry(textureEntry);
         textureView.setMediaPlayer(mediaPlayer);
         mediaPlayer.setVideoTrackEnabled(true);
-        //
         mediaPlayer.setEventListener(
                 new MediaPlayer.EventListener() {
                     @Override
@@ -295,7 +309,7 @@ final class FlutterVlcPlayer implements PlatformView {
                 media.addOption(":no-omxil-dr");
             }
             if (options != null) {
-                for (String option: options)
+                for (String option : options)
                     media.addOption(option);
             }
             mediaPlayer.setMedia(media);
@@ -350,7 +364,7 @@ final class FlutterVlcPlayer implements PlatformView {
 
     long getPosition() {
         if (mediaPlayer == null) return -1;
-        
+
         return mediaPlayer.getTime();
     }
 

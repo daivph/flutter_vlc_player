@@ -1,44 +1,19 @@
 import 'package:flutter/material.dart';
-import 'multiple_tab.dart';
-import 'single_tab.dart';
+import 'package:flutter/services.dart';
 
-void main() {
+import 'orca/ui/screens/home.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual,
+      overlays: <SystemUiOverlay>[]);
+  SystemChrome.setPreferredOrientations([
+    DeviceOrientation.landscapeLeft,
+    DeviceOrientation.landscapeRight,
+  ]);
   runApp(
-    MaterialApp(
-      home: App(),
+    const MaterialApp(
+      home: HomePage(),
     ),
   );
-}
-
-class App extends StatefulWidget {
-  @override
-  _AppState createState() => _AppState();
-}
-
-class _AppState extends State<App> {
-  @override
-  Widget build(BuildContext context) {
-    return DefaultTabController(
-      length: 2,
-      child: Scaffold(
-        appBar: AppBar(
-          centerTitle: true,
-          title: Text('Vlc Player Example'),
-          bottom: TabBar(
-            tabs: [
-              Tab(text: 'Single'),
-              Tab(text: 'Multiple'),
-            ],
-          ),
-        ),
-        body: TabBarView(
-          physics: NeverScrollableScrollPhysics(),
-          children: [
-            SingleTab(),
-            MultipleTab(),
-          ],
-        ),
-      ),
-    );
-  }
 }
