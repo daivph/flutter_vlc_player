@@ -1,28 +1,24 @@
 package software.solid.fluttervlcplayer;
 
+import android.content.Context;
+import android.graphics.Bitmap;
+import android.net.Uri;
+import android.util.Base64;
+import android.util.DisplayMetrics;
+import android.view.View;
+import android.view.WindowManager;
+
 import org.videolan.libvlc.LibVLC;
 import org.videolan.libvlc.Media;
 import org.videolan.libvlc.MediaPlayer;
 import org.videolan.libvlc.RendererDiscoverer;
 import org.videolan.libvlc.RendererItem;
-import org.videolan.libvlc.interfaces.IMedia;
-import org.videolan.libvlc.interfaces.IVLCVout;
 
-import android.content.Context;
-import android.content.res.Resources;
-import android.graphics.Bitmap;
-import android.graphics.Point;
-import android.graphics.SurfaceTexture;
-import android.net.Uri;
-import android.opengl.GLES20;
-import android.util.Base64;
-import android.util.DisplayMetrics;
-import android.util.Log;
-import android.view.Display;
-import android.view.Surface;
-import android.view.SurfaceView;
-import android.view.View;
-import android.view.WindowManager;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
 import io.flutter.plugin.common.BinaryMessenger;
 import io.flutter.plugin.common.EventChannel;
@@ -30,17 +26,9 @@ import io.flutter.plugin.platform.PlatformView;
 import io.flutter.view.TextureRegistry;
 import software.solid.fluttervlcplayer.Enums.HwAcc;
 
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-
 final class FlutterVlcPlayer implements PlatformView {
 
     private final String TAG = this.getClass().getSimpleName();
-    private final boolean debug = false;
     //
     private final Context context;
     private final VLCTextureView textureView;
@@ -155,101 +143,98 @@ final class FlutterVlcPlayer implements PlatformView {
         textureView.setMediaPlayer(mediaPlayer);
         mediaPlayer.setVideoTrackEnabled(true);
         mediaPlayer.setEventListener(
-                new MediaPlayer.EventListener() {
-                    @Override
-                    public void onEvent(MediaPlayer.Event event) {
-                        HashMap<String, Object> eventObject = new HashMap<>();
-                        //
-                        // Current video track is only available when the media is playing
-                        int height = 0;
-                        int width = 0;
-                        Media.VideoTrack currentVideoTrack = mediaPlayer.getCurrentVideoTrack();
-                        if (currentVideoTrack != null) {
-                            height = currentVideoTrack.height;
-                            width = currentVideoTrack.width;
-                        }
-                        //
-                        switch (event.type) {
+                event -> {
+                    HashMap<String, Object> eventObject = new HashMap<>();
+                    //
+                    // Current video track is only available when the media is playing
+                    int height = 0;
+                    int width = 0;
+                    Media.VideoTrack currentVideoTrack = mediaPlayer.getCurrentVideoTrack();
+                    if (currentVideoTrack != null) {
+                        height = currentVideoTrack.height;
+                        width = currentVideoTrack.width;
+                    }
+                    //
+                    switch (event.type) {
 
-                            case MediaPlayer.Event.Opening:
-                                eventObject.put("event", "opening");
-                                mediaEventSink.success(eventObject);
-                                break;
+                        case MediaPlayer.Event.Opening:
+                            eventObject.put("event", "opening");
+                            mediaEventSink.success(eventObject);
+                            break;
 
-                            case MediaPlayer.Event.Paused:
-                                eventObject.put("event", "paused");
-                                mediaEventSink.success(eventObject);
-                                break;
+                        case MediaPlayer.Event.Paused:
+                            eventObject.put("event", "paused");
+                            mediaEventSink.success(eventObject);
+                            break;
 
-                            case MediaPlayer.Event.Stopped:
-                                eventObject.put("event", "stopped");
-                                mediaEventSink.success(eventObject);
-                                break;
+                        case MediaPlayer.Event.Stopped:
+                            eventObject.put("event", "stopped");
+                            mediaEventSink.success(eventObject);
+                            break;
 
-                            case MediaPlayer.Event.Playing:
-                                eventObject.put("event", "playing");
-                                eventObject.put("height", height);
-                                eventObject.put("width", width);
-                                eventObject.put("speed", mediaPlayer.getRate());
-                                eventObject.put("duration", mediaPlayer.getLength());
-                                eventObject.put("audioTracksCount", mediaPlayer.getAudioTracksCount());
-                                eventObject.put("activeAudioTrack", mediaPlayer.getAudioTrack());
-                                eventObject.put("spuTracksCount", mediaPlayer.getSpuTracksCount());
-                                eventObject.put("activeSpuTrack", mediaPlayer.getSpuTrack());
-                                mediaEventSink.success(eventObject.clone());
-                                break;
+                        case MediaPlayer.Event.Playing:
+                            eventObject.put("event", "playing");
+                            eventObject.put("height", height);
+                            eventObject.put("width", width);
+                            eventObject.put("speed", mediaPlayer.getRate());
+                            eventObject.put("duration", mediaPlayer.getLength());
+                            eventObject.put("audioTracksCount", mediaPlayer.getAudioTracksCount());
+                            eventObject.put("activeAudioTrack", mediaPlayer.getAudioTrack());
+                            eventObject.put("spuTracksCount", mediaPlayer.getSpuTracksCount());
+                            eventObject.put("activeSpuTrack", mediaPlayer.getSpuTrack());
+                            mediaEventSink.success(eventObject.clone());
+                            break;
 
-                            case MediaPlayer.Event.Vout:
+                        case MediaPlayer.Event.Vout:
 //                                mediaPlayer.getVLCVout().setWindowSize(textureView.getWidth(), textureView.getHeight());
-                                break;
+                            break;
 
-                            case MediaPlayer.Event.EndReached:
-                                eventObject.put("event", "ended");
-                                eventObject.put("position", mediaPlayer.getTime());
-                                mediaEventSink.success(eventObject);
-                                break;
+                        case MediaPlayer.Event.EndReached:
+                            eventObject.put("event", "ended");
+                            eventObject.put("position", mediaPlayer.getTime());
+                            mediaEventSink.success(eventObject);
+                            break;
 
-                            case MediaPlayer.Event.Buffering:
-                            case MediaPlayer.Event.TimeChanged:
-                                eventObject.put("event", "timeChanged");
-                                eventObject.put("height", height);
-                                eventObject.put("width", width);
-                                eventObject.put("speed", mediaPlayer.getRate());
-                                eventObject.put("position", mediaPlayer.getTime());
-                                eventObject.put("duration", mediaPlayer.getLength());
-                                eventObject.put("buffer", event.getBuffering());
-                                eventObject.put("audioTracksCount", mediaPlayer.getAudioTracksCount());
-                                eventObject.put("activeAudioTrack", mediaPlayer.getAudioTrack());
-                                eventObject.put("spuTracksCount", mediaPlayer.getSpuTracksCount());
-                                eventObject.put("activeSpuTrack", mediaPlayer.getSpuTrack());
-                                eventObject.put("isPlaying", mediaPlayer.isPlaying());
-                                mediaEventSink.success(eventObject);
-                                break;
+                        case MediaPlayer.Event.Buffering:
+                        case MediaPlayer.Event.TimeChanged:
+                            eventObject.put("event", "timeChanged");
+                            eventObject.put("height", height);
+                            eventObject.put("width", width);
+                            eventObject.put("speed", mediaPlayer.getRate());
+                            eventObject.put("position", mediaPlayer.getTime());
+                            eventObject.put("duration", mediaPlayer.getLength());
+                            eventObject.put("buffer", event.getBuffering());
+                            eventObject.put("audioTracksCount", mediaPlayer.getAudioTracksCount());
+                            eventObject.put("activeAudioTrack", mediaPlayer.getAudioTrack());
+                            eventObject.put("spuTracksCount", mediaPlayer.getSpuTracksCount());
+                            eventObject.put("activeSpuTrack", mediaPlayer.getSpuTrack());
+                            eventObject.put("isPlaying", mediaPlayer.isPlaying());
+                            mediaEventSink.success(eventObject);
+                            break;
 
-                            case MediaPlayer.Event.EncounteredError:
-                                //mediaEventSink.error("500", "Player State got an error.", null);
-                                eventObject.put("event", "error");
-                                mediaEventSink.success(eventObject);
-                                break;
+                        case MediaPlayer.Event.EncounteredError:
+                            //mediaEventSink.error("500", "Player State got an error.", null);
+                            eventObject.put("event", "error");
+                            mediaEventSink.success(eventObject);
+                            break;
 
-                            case MediaPlayer.Event.RecordChanged:
-                                eventObject.put("event", "recording");
-                                eventObject.put("isRecording", event.getRecording());
-                                eventObject.put("recordPath", event.getRecordPath());
-                                mediaEventSink.success(eventObject);
-                                break;
+                        case MediaPlayer.Event.RecordChanged:
+                            eventObject.put("event", "recording");
+                            eventObject.put("isRecording", event.getRecording());
+                            eventObject.put("recordPath", event.getRecordPath());
+                            mediaEventSink.success(eventObject);
+                            break;
 
-                            case MediaPlayer.Event.LengthChanged:
-                            case MediaPlayer.Event.MediaChanged:
-                            case MediaPlayer.Event.ESAdded:
-                            case MediaPlayer.Event.ESDeleted:
-                            case MediaPlayer.Event.ESSelected:
-                            case MediaPlayer.Event.PausableChanged:
-                            case MediaPlayer.Event.SeekableChanged:
-                            case MediaPlayer.Event.PositionChanged:
-                            default:
-                                break;
-                        }
+                        case MediaPlayer.Event.LengthChanged:
+                        case MediaPlayer.Event.MediaChanged:
+                        case MediaPlayer.Event.ESAdded:
+                        case MediaPlayer.Event.ESDeleted:
+                        case MediaPlayer.Event.ESSelected:
+                        case MediaPlayer.Event.PausableChanged:
+                        case MediaPlayer.Event.SeekableChanged:
+                        case MediaPlayer.Event.PositionChanged:
+                        default:
+                            break;
                     }
                 }
         );
@@ -381,7 +366,7 @@ final class FlutterVlcPlayer implements PlatformView {
     }
 
     HashMap<Integer, String> getSpuTracks() {
-        if (mediaPlayer == null) return new HashMap<Integer, String>();
+        if (mediaPlayer == null) return new HashMap<>();
 
         MediaPlayer.TrackDescription[] spuTracks = mediaPlayer.getSpuTracks();
         HashMap<Integer, String> subtitles = new HashMap<>();
@@ -430,7 +415,7 @@ final class FlutterVlcPlayer implements PlatformView {
     }
 
     HashMap<Integer, String> getAudioTracks() {
-        if (mediaPlayer == null) return new HashMap<Integer, String>();
+        if (mediaPlayer == null) return new HashMap<>();
 
         MediaPlayer.TrackDescription[] audioTracks = mediaPlayer.getAudioTracks();
         HashMap<Integer, String> audios = new HashMap<>();
@@ -479,7 +464,7 @@ final class FlutterVlcPlayer implements PlatformView {
     }
 
     HashMap<Integer, String> getVideoTracks() {
-        if (mediaPlayer == null) return new HashMap<Integer, String>();
+        if (mediaPlayer == null) return new HashMap<>();
 
         MediaPlayer.TrackDescription[] videoTracks = mediaPlayer.getVideoTracks();
         HashMap<Integer, String> videos = new HashMap<>();
@@ -527,7 +512,7 @@ final class FlutterVlcPlayer implements PlatformView {
         return mediaPlayer.getAspectRatio();
     }
 
-    void startRendererScanning(String rendererService) {
+    void startRendererScanning() {
         if (libVLC == null) return;
 
         //
@@ -542,31 +527,28 @@ final class FlutterVlcPlayer implements PlatformView {
         for (RendererDiscoverer.Description renderer : renderers) {
             RendererDiscoverer rendererDiscoverer = new RendererDiscoverer(libVLC, renderer.name);
             try {
-                rendererDiscoverer.setEventListener(new RendererDiscoverer.EventListener() {
-                    @Override
-                    public void onEvent(RendererDiscoverer.Event event) {
-                        HashMap<String, Object> eventObject = new HashMap<>();
-                        RendererItem item = event.getItem();
-                        switch (event.type) {
-                            case RendererDiscoverer.Event.ItemAdded:
-                                rendererItems.add(item);
-                                eventObject.put("event", "attached");
-                                eventObject.put("id", item.name);
-                                eventObject.put("name", item.displayName);
-                                rendererEventSink.success(eventObject);
-                                break;
+                rendererDiscoverer.setEventListener(event -> {
+                    HashMap<String, Object> eventObject = new HashMap<>();
+                    RendererItem item = event.getItem();
+                    switch (event.type) {
+                        case RendererDiscoverer.Event.ItemAdded:
+                            rendererItems.add(item);
+                            eventObject.put("event", "attached");
+                            eventObject.put("id", item.name);
+                            eventObject.put("name", item.displayName);
+                            rendererEventSink.success(eventObject);
+                            break;
 
-                            case RendererDiscoverer.Event.ItemDeleted:
-                                rendererItems.remove(item);
-                                eventObject.put("event", "detached");
-                                eventObject.put("id", item.name);
-                                eventObject.put("name", item.displayName);
-                                rendererEventSink.success(eventObject);
-                                break;
+                        case RendererDiscoverer.Event.ItemDeleted:
+                            rendererItems.remove(item);
+                            eventObject.put("event", "detached");
+                            eventObject.put("id", item.name);
+                            eventObject.put("name", item.displayName);
+                            rendererEventSink.success(eventObject);
+                            break;
 
-                            default:
-                                break;
-                        }
+                        default:
+                            break;
                     }
                 });
                 rendererDiscoverer.start();
@@ -601,7 +583,7 @@ final class FlutterVlcPlayer implements PlatformView {
     }
 
     ArrayList<String> getAvailableRendererServices() {
-        if (libVLC == null) return new ArrayList<String>();
+        if (libVLC == null) return new ArrayList<>();
 
         RendererDiscoverer.Description[] renderers = RendererDiscoverer.list(libVLC);
         ArrayList<String> availableRendererServices = new ArrayList<>();
@@ -662,9 +644,7 @@ final class FlutterVlcPlayer implements PlatformView {
     }
 
     private void log(String message) {
-        if (debug) {
-            Log.d(TAG, message);
-        }
+        boolean debug = false;
     }
 
 }

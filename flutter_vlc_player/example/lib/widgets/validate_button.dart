@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
-class ValidateButton extends StatelessWidget {
+class OrcaButton extends StatelessWidget {
   final String title;
   final Color color;
   final VoidCallback onPressed;
-  const ValidateButton({
+  const OrcaButton({
     Key? key,
     required this.title,
     required this.color,

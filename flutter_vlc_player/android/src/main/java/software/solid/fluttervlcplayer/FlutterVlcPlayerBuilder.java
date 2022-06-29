@@ -1,16 +1,9 @@
 package software.solid.fluttervlcplayer;
 
 import android.content.Context;
-import android.content.res.AssetFileDescriptor;
-import android.content.res.AssetManager;
-import android.os.Build;
 import android.util.LongSparseArray;
 
-import androidx.annotation.RequiresApi;
-
-import java.io.File;
 import java.util.ArrayList;
-import java.util.List;
 
 import io.flutter.plugin.common.BinaryMessenger;
 import io.flutter.view.TextureRegistry;
@@ -374,7 +367,7 @@ public class FlutterVlcPlayerBuilder implements Messages.VlcPlayerApi {
     @Override
     public void startRendererScanning(Messages.RendererScanningMessage arg) {
         FlutterVlcPlayer player = vlcPlayers.get(arg.getViewId());
-        player.startRendererScanning(arg.getRendererService());
+        player.startRendererScanning();
     }
 
     @Override

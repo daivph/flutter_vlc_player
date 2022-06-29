@@ -30,19 +30,45 @@ class HomePageState extends State<HomePage> {
                 style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 30),
-              ValidateButton(
-                  title: 'Play mp4',
+              OrcaButton(
+                  title: 'audio ac3',
                   color: Colors.blue,
                   onPressed: () {
                     pushScreen(
                       context,
                       const VideoPlayer(
                         playUrl:
-                            'https://www.learningcontainer.com/wp-content/uploads/2020/05/sample-mp4-file.mp4',
+                            'http://tempkamikazetime.ddns.net:8080/Hirosat/qgxXmazF/1148',
                       ),
                     );
                   }),
               const SizedBox(height: 10),
+              OrcaButton(
+                  title: 'audio mp2',
+                  color: Colors.blue,
+                  onPressed: () {
+                    pushScreen(
+                      context,
+                      const VideoPlayer(
+                        playUrl:
+                            'http://mdstream.net:8080/zid.maher/DWe43hwhxq/1748',
+                      ),
+                    );
+                  }),
+              const SizedBox(height: 10),
+              OrcaButton(
+                title: 'video mpeg2 - audio mp2',
+                color: Colors.blue,
+                onPressed: () {
+                  pushScreen(
+                    context,
+                    const VideoPlayer(
+                      playUrl:
+                          'http://restream.geniptv.com:8080/zid.maher/eJXiNlDIX1/6058',
+                    ),
+                  );
+                },
+              ),
             ],
           ),
         ),
