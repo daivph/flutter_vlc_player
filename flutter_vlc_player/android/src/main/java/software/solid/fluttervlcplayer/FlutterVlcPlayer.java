@@ -5,6 +5,7 @@ import android.graphics.Bitmap;
 import android.net.Uri;
 import android.util.Base64;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
 
@@ -57,7 +58,6 @@ final class FlutterVlcPlayer implements PlatformView {
     public void dispose() {
         if (isDisposed)
             return;
-        //
         textureView.dispose();
         textureEntry.release();
         mediaEventChannel.setStreamHandler(null);
@@ -114,10 +114,6 @@ final class FlutterVlcPlayer implements PlatformView {
         textureView.setFitsSystemWindows(true);
     }
 
-    // private Uri getStreamUri(String streamPath, boolean isLocal) {
-    //     return isLocal ? Uri.fromFile(new File(streamPath)) : Uri.parse(streamPath);
-    // }
-
     public void initialize(List<String> options) {
         this.options = options;
         libVLC = new LibVLC(context, options);
@@ -135,7 +131,6 @@ final class FlutterVlcPlayer implements PlatformView {
         windowManager.getDefaultDisplay().getMetrics(displayMetrics);
         mHeight = displayMetrics.heightPixels;
         mWidth = displayMetrics.widthPixels;
-        //
 
         mediaPlayer.getVLCVout().setWindowSize(mWidth, mHeight);
         mediaPlayer.getVLCVout().setVideoSurface(textureView.getSurfaceTexture());
@@ -170,6 +165,7 @@ final class FlutterVlcPlayer implements PlatformView {
                         case MediaPlayer.Event.Stopped:
                             eventObject.put("event", "stopped");
                             mediaEventSink.success(eventObject);
+                            Log.d("VLC-STOPPED", "setupVlcMediaPlayer: " + mediaPlayer.getTitle());
                             break;
 
                         case MediaPlayer.Event.Playing:
@@ -184,17 +180,15 @@ final class FlutterVlcPlayer implements PlatformView {
                             eventObject.put("activeSpuTrack", mediaPlayer.getSpuTrack());
                             mediaEventSink.success(eventObject.clone());
                             break;
-
                         case MediaPlayer.Event.Vout:
+                            Log.d("VOUT", "setupVlcMediaPlayer: " + mediaPlayer.getScale());
 //                                mediaPlayer.getVLCVout().setWindowSize(textureView.getWidth(), textureView.getHeight());
                             break;
-
                         case MediaPlayer.Event.EndReached:
                             eventObject.put("event", "ended");
                             eventObject.put("position", mediaPlayer.getTime());
                             mediaEventSink.success(eventObject);
                             break;
-
                         case MediaPlayer.Event.Buffering:
                         case MediaPlayer.Event.TimeChanged:
                             eventObject.put("event", "timeChanged");

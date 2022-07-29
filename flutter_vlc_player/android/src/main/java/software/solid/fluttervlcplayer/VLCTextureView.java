@@ -5,6 +5,7 @@ import org.videolan.libvlc.interfaces.IVLCVout;
 
 import android.content.Context;
 import android.graphics.SurfaceTexture;
+import android.util.Log;
 import android.view.TextureView;
 import android.view.View;
 import android.os.Handler;
@@ -163,6 +164,7 @@ public class VLCTextureView extends TextureView implements TextureView.SurfaceTe
 
     @Override
     public void onLayoutChange(View view, int left, int top, int right, int bottom, int oldLeft, int oldTop, int oldRight, int oldBottom) {
+        Log.d("LAYOUT-CHANGED", "onLayoutChange: ");
         if (left != oldLeft || top != oldTop || right != oldRight || bottom != oldBottom) {
             updateLayoutSize(view);
         }

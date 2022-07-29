@@ -56,11 +56,6 @@ class _VideoPlayerState extends State<VideoPlayer> {
   }
 
   @override
-  void dispose() {
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: VlcPlayerWithControls(

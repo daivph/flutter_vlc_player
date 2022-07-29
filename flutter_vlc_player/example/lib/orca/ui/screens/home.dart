@@ -38,7 +38,7 @@ class HomePageState extends State<HomePage> {
                       context,
                       const VideoPlayer(
                         playUrl:
-                            'http://tempkamikazetime.ddns.net:8080/Hirosat/qgxXmazF/1148',
+                            'http://556677.ovh:25461/live/lmrrht6z/ywr0oota/2812.ts',
                       ),
                     );
                   }),
@@ -51,7 +51,7 @@ class HomePageState extends State<HomePage> {
                       context,
                       const VideoPlayer(
                         playUrl:
-                            'http://mdstream.net:8080/zid.maher/DWe43hwhxq/1748',
+                            'http://556677.ovh:25461/live/lmrrht6z/ywr0oota/100802.ts',
                       ),
                     );
                   }),
